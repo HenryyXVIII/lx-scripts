@@ -310,6 +310,8 @@ do
             echo "=> Cert Path: $PKIPATH"
             echo "=> Cert Path: $CERTPATH"
 
+            mkdir $CERTPATH
+            chown -aG nagios:nagios $CERTPATH
 
             log "Hole Master-Zertifikat..."
             #icinga2 pki save-cert \
@@ -411,10 +413,10 @@ done
 log "Host erfolgreich konfiguriert"
 log "Hosteintrag in Director:"
 log "Hostname $AGENTCN"
-log "Hostadresse $(Hostname -I | awk '{print $1}')"
+log "Hostadresse $(hostname -I | awk '{print $1}')"
 log ""
 log "oder via Icingacli"
-log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(Hostname -I | awk '{print $1}') --imports linux_host"
+log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(hostname -I | awk '{print $1}') --imports linux_host"
 log "----" 
 log "installation abgeschlossen"
 log "----"
