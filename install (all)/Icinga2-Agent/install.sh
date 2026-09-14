@@ -356,7 +356,7 @@ do
               --trustedcert "$CERTPATH/ca.crt" \
               --accept-commands \
               --accept-config \
-              --disable-confd \
+              --disable-confd 
 
             
             log "Node Setup erfolgreich abgeschlossen!"
