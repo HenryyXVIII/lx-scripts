@@ -128,15 +128,91 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-###############
-# Auslesen OS #
-###############
+####################
+# read OS Env Vars #
+####################
 
 source /etc/os-release
 
 log "OS detektion"
 log "detect $NAME"
 log "Install for $ID"
+
+#####################
+# Install functions #
+#####################
+
+apt_install_basics () {
+    log "$ID"
+    log "Paketlisten Aktualisieren"
+    log "Abhängikeiten installieren"
+    apt update && apt -y install apt-transport-https wget
+}
+
+
+
+#func-add-sourcelist deb/ubuntu
+add_sourcelists () {
+
+    wget -O ./icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+${ID}${VERSION_ID}.deb"
+    log "icinga2 key downloaden"
+    #installation key
+    apt -y install ./icinga-archive-keyring.deb
+    log "installation key"
+     
+    rm ./icinga-archive-keyring.deb
+    log "löschen des keys"
+           
+    #Icinga in die apt sourecliste
+    echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/debian icinga-${DIST} main" > \
+    /etc/apt/sources.list.d/${DIST}-icinga.list
+      
+    echo "deb-src [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/debian icinga-${DIST} main" >> \
+    /etc/apt/sources.list.d/${DIST}-icinga.list
+    log "schreiben der source list"
+}
+
+#func-install-icinga  deb/ubuntu
+install_icinga () {
+    echo "installation Icinga"
+    apt update && apt -y install icinga2 monitoring-plugins
+    log "installation icinga2 und monitoring plugins"
+    #verifizierung
+    icinga2 daemon -C
+}
+
+test_installed(){
+
+    #test sourcelist already exist
+    FILE=/etc/apt/sources.list.d/${DIST}-icinga.list    
+    if [ -f $FILE ]; then
+       log "Icinga2 sourcelist file $FILE alreadyexists, skipping installation."
+    else
+       log "Icinga2 sourcelist file $FILE does not exist, start installation."
+       add_sourcelists
+    fi
+    
+    #test icinga2 package installed?    
+    if dpkg -s icinga2 &>/dev/null; then
+        log "The Icinga2 package is already installed, skipping installation."
+    else
+        log "The Icinga2 package is not installed, initialize installation"
+        install_icinga
+    fi
+
+}
+
+#function-dpkg-valid
+dpkg_valid () {
+    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin" "monitoring") 
+    for pkg in "${PACKAGES[@]}"; do 
+        if ! command -v "$pkg" &> /dev/null; then 
+            echo "Fehlt: $pkg" 
+        else echo "Vorhanden: $pkg" 
+        fi 
+    done
+
+}
 
 
 ################
@@ -145,62 +221,28 @@ log "Install for $ID"
 
 log "Distro Wahl"
 if [ "$ID" = "debian" ]; then
-
+  
+    #Basisprogramme
+    apt_install_basics
+    
+    #set enviroments    
     log "$ID"
     if [ -n "${VERSION_CODENAME:-}" ]; then
-    DIST="$VERSION_CODENAME"
+        DIST="$VERSION_CODENAME"
     else
-    DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release)
+        DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release)
     fi
+            
+    test_installed    
+    dpkg_valid
 
-    #Basisprogramme
-    apt update && apt -y install apt-transport-https wget
-    log "Paketlisten Aktualisieren"
-    log "Abhängikeiten installieren"
-    #key
-    wget -O ./icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+debian$VERSION_ID.deb"
-    log "icinga2 key downloaden"
-    #installation key
-    apt -y install ./icinga-archive-keyring.deb
-    log "installation key"
+
     
-    #Icinga in die apt sourecliste
-    echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/debian icinga-${DIST} main" > \
-    /etc/apt/sources.list.d/${DIST}-icinga.list
-
-    echo "deb-src [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/debian icinga-${DIST} main" >> \
-    /etc/apt/sources.list.d/${DIST}-icinga.list
-    log "schreiben der source list"
-    
-    #installation Icinga
-    echo "installation Icinga"
-    apt update && apt -y install icinga2 monitoring-plugins
-    log "installation icinga2 und monitoring plugins"
-
-    #verifizierung
-    icinga2 daemon -C
-    
-    #echo "installation Plugins"
-    #apt -y install monitoring-plugins
-
-    rm ./icinga-archive-keyring.deb
-    log "löschen des keys"
-
 
 
 elif [ "$ID" = "ubuntu" ]; then
 
-    log "$ID"
-    log "Paketlisten Aktualisieren"
-    log "Abhängikeiten installieren"
-    apt update && apt -y install apt-transport-https wget
-
-    wget -O icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+ubuntu$VERSION_ID.deb"
-    log "icinga2 key downloaden"
-
-    apt -y install ./icinga-archive-keyring.deb
-    log "installation key"
-
+    apt_install_basics
     . /etc/os-release
     
     if [ ! -z ${UBUNTU_CODENAME+x} ]; then 
@@ -208,21 +250,8 @@ elif [ "$ID" = "ubuntu" ]; then
     else DIST="$(lsb_release -c| awk '{print $2}')"
     fi
  
-    echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/ubuntu icinga-${DIST} main" > \
-    /etc/apt/sources.list.d/${DIST}-icinga.list
- 
-    echo "deb-src [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/ubuntu icinga-${DIST} main" >> \
-    /etc/apt/sources.list.d/${DIST}-icinga.list
-    log "add sourcelist"
-
-    apt install icinga2 monitoring-plugins
-    log "install icinga and monitoring Plugins"
-
-    icinga2 daemon -C
-    rm ./icinga-archive-keyring.deb
-    log "löschen des keys"
-
-
+    test_installed
+    dpkg_valid
 
 elif [ "$ID" = "rhel" ]; then
 
@@ -413,10 +442,10 @@ done
 log "Host erfolgreich konfiguriert"
 log "Hosteintrag in Director:"
 log "Hostname $AGENTCN"
-log "Hostadresse $(hostname -I | awk '{print $1}')"
+log "Hostadresse $(hostname -i | awk '{print $1}')"
 log ""
 log "oder via Icingacli"
-log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(hostname -I | awk '{print $1}') --imports linux_host"
+log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(hostname - | awk '{print $1}') --imports linux_host"
 log "----" 
 log "installation abgeschlossen"
 log "----"
