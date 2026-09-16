@@ -24,7 +24,7 @@ exit_trap {
   fi
 
   echo -n "Exit, cleanup ... "
-  rm -rf "$TEMP_FILE"
+#  rm -rf "$TEMP_FILE"
   echo "ok"
 }
 ########
