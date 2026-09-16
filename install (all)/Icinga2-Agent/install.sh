@@ -159,15 +159,15 @@ add_sourcelists () {
     #installation key
     apt -y install ./icinga-archive-keyring.deb
     log "installation key"
-     
+    
     rm ./icinga-archive-keyring.deb
     log "löschen des keys"
            
     #Icinga in die apt sourecliste
-    echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/debian icinga-${DIST} main" > \
+    echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/${ID} icinga-${DIST} main" > \
     /etc/apt/sources.list.d/${DIST}-icinga.list
       
-    echo "deb-src [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/debian icinga-${DIST} main" >> \
+    echo "deb-src [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/${ID} icinga-${DIST} main" >> \
     /etc/apt/sources.list.d/${DIST}-icinga.list
     log "schreiben der source list"
 }
@@ -185,7 +185,7 @@ test_installed(){
 
     #test sourcelist already exist
     FILE=/etc/apt/sources.list.d/${DIST}-icinga.list    
-    if [ -f $FILE ]; then
+    if [ -f "$FILE" ]; then
        log "Icinga2 sourcelist file $FILE alreadyexists, skipping installation."
     else
        log "Icinga2 sourcelist file $FILE does not exist, start installation."
@@ -204,13 +204,22 @@ test_installed(){
 
 #function-dpkg-valid
 dpkg_valid () {
-    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin" "monitoring") 
-    for pkg in "${PACKAGES[@]}"; do 
-        if ! command -v "$pkg" &> /dev/null; then 
-            echo "Fehlt: $pkg" 
-        else echo "Vorhanden: $pkg" 
-        fi 
-    done
+
+PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin")
+
+for pkg in "${PACKAGES[@]}"; do
+    if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
+        log "Paket '$pkg' fehlt oder ist beschädigt. Starte Neuinstallation..."
+
+        apt-get update && apt-get install --reinstall -y "$pkg"
+        
+        if [ "$pkg" = "icinga2" ]; then
+        exit 1
+        fi
+    else
+        log "Vorhanden: $pkg"
+    fi
+done
 
 }
 
@@ -327,9 +336,8 @@ do
         [Yy][Jj]|[Yy]|[Jj]|"")
         
             #konfiguration
-            log "konfiguration automatisch"
-
-            log "variablen"
+            log "start autoconfig"
+            log "current vars"
             
             echo "=> Host CN: $AGENTCN"
             echo "=> Parent CN: $PARENTCN"
