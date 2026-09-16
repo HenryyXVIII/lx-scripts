@@ -15,6 +15,18 @@ log() {
     echo "=> [$(date '+%F %T')] $*" | tee -a "$LOGFILE"
 }
 
+exit_trap {
+  local exit_code=$1
+  local line_no=$2
+
+  if [ "$exit_code" != "0" ]; then
+    echo "Error $exit_code occurred on $line_no"
+  fi
+
+  echo -n "Exit, cleanup ... "
+  rm -rf "$TEMP_FILE"
+  echo "ok"
+}
 ########
 # HELP #
 ########
