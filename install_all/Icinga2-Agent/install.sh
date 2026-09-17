@@ -347,38 +347,30 @@ log "installation done, choose how to proceed"
 
 select_server () {
 
-# Alle Schlüssel in ein Array schreiben (sortiert, damit die Reihenfolge stabil bleibt)
-    keys=($(printf '%s\n' "${!HOST[@]}" | sort))
-    
-    # Menü anzeigen
-    echo "Bitte wähle einen Server aus:"
-    select_idx=1
-    for k in "${keys[@]}"; do
-        echo "  $select_idx) $k"
-        ((select_idx++))
-    done
-    
-    # Schleife für die Eingabe direkt von /dev/tty
-    while true; do
-        read -p "Nummer eingeben: " choice < /dev/tty
-        
-        # Prüfen, ob die Eingabe eine gültige Nummer ist
-        if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#keys[@]} )); then
-            # Array-Index ist (Auswahl - 1)
-            selected_key="${keys[$((choice - 1))]}"
+keys=("${!HOST[@]}")
+PS3="Bitte wähle einen Server aus (Nummer eingeben): "
+
+# WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
+    select selected_key in "${keys[@]}"; do
+        if [[ -n "$selected_key" ]]; then
+            echo "Du hast $selected_key ausgewählt."
+            
+            IFS=',' read -r server_name server_ip server_domain <<< "${HOST[$selected_key]}"
+            
+            server_name=$(echo "$server_name" | xargs)
+            server_ip=$(echo "$server_ip" | xargs)
+            server_domain=$(echo "$server_domain" | xargs)
+            
             break
         else
-            echo "Ungültige Auswahl. Bitte eine Zahl zwischen 1 und ${#keys[@]} eingeben."
+            echo "Ungültige Auswahl. Bitte versuche es erneut."
         fi
-    done
+    done < /dev/tty
     
-    # Daten auslesen und trennen
-    IFS=',' read -r server_name server_ip server_domain <<< "${HOST[$selected_key]}"
-    server_name=$(echo "$server_name" | xargs)
-    server_ip=$(echo "$server_ip" | xargs)
-    server_domain=$(echo "$server_domain" | xargs)
-    
-    echo "Du hast ausgewählt: $selected_key ($server_name - $server_ip)"
+    echo "--- Gespeicherte Variablen ---"
+    echo "Name:   $server_name"
+    echo "IP:     $server_ip"
+    echo "Domain: $server_domain"
 
 
 #select list_key in "${!HOST[@]}"; do
