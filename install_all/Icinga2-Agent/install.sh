@@ -393,10 +393,19 @@ do
             echo "=> Cluster Zone: $PARENTZONE"
             echo "=> Cert Path: $PKIPATH"
             echo "=> Cert Path: $CERTPATH"
+            
+                
+            if [ ! -d "$CERTPATH" ]; then
+                log "The certificat directory $CERTPATH does not exist, creating"
+                mkdir $CERTPATH
+                chown nagios:nagios $CERTPATH
+                chmod 755 $CERTPATH
+            else
+               log "The directory for the certifcates $CERTPATH exist, skipping creating"
+              
+            fi
+            
 
-            mkdir $CERTPATH
-            chown nagios:nagios $CERTPATH
-            chmod 755 $CERTPATH
 
             log "Hole Master-Zertifikat..."
             #icinga2 pki save-cert \
