@@ -119,7 +119,7 @@ if [ -n "$PARENTIP" ] && [ -z "$RETURN" ]; then
    log "Autoconfig enabled"
 fi
 
-echo "$VERSION"
+echo "Script is running on Version: $VERSION"
 
 ####################
 # test permissions #
