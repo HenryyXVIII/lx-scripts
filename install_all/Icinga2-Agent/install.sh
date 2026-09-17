@@ -359,25 +359,13 @@ do
             #konfiguration           
             log "start autoconfig"
 
-            echo "Bitte wähle einen Server:"
             select list_key in "${!HOST[@]}"; do
-                if [ -n "$list_key" ]; then
-                    # Den String beim Komma aufteilen
+                if [[ -n "${HOST[$list_key]:-}" ]]; then
+                    # Werte aufteilen und Leerzeichen entfernen
                     IFS=',' read -r list_name list_ip list_fqdn <<< "${HOST[$list_key]}"
-                    
-                    # Leerzeichen am Anfang der aufgeteilten Werte entfernen
-                    list_ip=$(echo "$list_ip" | xargs)
-                    list_fqdn=$(echo "$list_fqdn" | xargs)
-                    
-                    echo "Ausgewählt: $list_key"
-                    echo "Name: $list_name"
-                    echo "IP:   $list_ip"
-                    echo "FQDN: $list_fqdn"
-                    
-                    PARENTCN="$list_name"
-                    PARENTIP="$list_ip"
-                    PARENTZONE="$list_fqdn"
-                    
+                    PARENTCN=$(echo "$list_name" | xargs)
+                    PARENTIP=$(echo "$list_ip" | xargs)
+                    PARENTZONE=$(echo "$list_fqdn" | xargs)
                     break
                 else
                     echo "Ungültige Auswahl."
