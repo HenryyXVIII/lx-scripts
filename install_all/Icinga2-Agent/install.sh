@@ -66,10 +66,10 @@ PKIPATH="/etc/icinga2/pki"
 CERTPATH="/var/lib/icinga2/certs"
 
 declare -A HOST
-HOST["server1"]="Satelit1, 192.168.1.1, Satelit1.test.lab"
-HOST["server2"]="Satelit2, 192.168.2.2, Satelit2.test.lab"
-HOST["server3"]="Satelit3, 192.168.3.3, Satelit1.test.lab"
-HOST["server4"]="Satelit4, 192.168.4.4, Satelit2.test.lab"
+HOST["server1"]="Satelit1, 192.168.1.1, Satelit1.test.lab, 5665"
+HOST["server2"]="Satelit2, 192.168.2.2, Satelit2.herd.lab, 9911"
+HOST["server3"]="Satelit3, 192.168.3.3, Satelit3.test.lab, 5185"
+HOST["server4"]="Satelit4, 192.168.4.4, Satelit4.ofen.lab, 52265"
 
 
 
@@ -355,11 +355,20 @@ PS3="Bitte wähle einen Server aus (Nummer eingeben): "
         if [[ -n "$selected_key" ]]; then
             echo "Du hast $selected_key ausgewählt."
             
-            IFS=',' read -r server_name server_ip server_domain <<< "${HOST[$selected_key]}"
+            IFS=',' read -r server_name server_ip server_domain server_port <<< "${HOST[$selected_key]}"
             
             server_name=$(echo "$server_name" | xargs)
             server_ip=$(echo "$server_ip" | xargs)
             server_domain=$(echo "$server_domain" | xargs)
+            server_port=$(echo "$server_port" | xargs)
+
+
+            PARENTCN=$server_domain
+            PARENTIP=$server_ip
+            PARENTZONE=$server_domain
+            PARENTPORT=$server_port
+
+            
             
             break
         else
@@ -371,6 +380,7 @@ PS3="Bitte wähle einen Server aus (Nummer eingeben): "
     echo "Name:   $server_name"
     echo "IP:     $server_ip"
     echo "Domain: $server_domain"
+    echo "PORT: $server_port"
 
 
 #select list_key in "${!HOST[@]}"; do
