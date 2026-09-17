@@ -382,7 +382,7 @@ do
                 else
                     echo "Ungültige Auswahl."
                 fi
-            done
+            done < /dev/tty
             
             log "current vars"
             
