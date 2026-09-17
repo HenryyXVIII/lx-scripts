@@ -345,6 +345,55 @@ fi
 log "erfolgreich"
 log "installation done, choose how to proceed"
 
+select_server () {
+
+# Alle Schlüssel (server1, server2, ...) in ein Array schreiben
+    keys=("${!HOST[@]}")
+    
+    # Auswahl-Prompt definieren
+    PS3="Bitte wähle einen Server aus (Nummer eingeben): "
+    
+    # Auswahlmenü starten
+    select selected_key in "${keys[@]}"; do
+        if [[ -n "$selected_key" ]]; then
+            echo "Du hast $selected_key ausgewählt."
+            
+            # Den String beim Komma auftrennen und in Variablen speichern
+            IFS=',' read -r server_name server_ip server_domain <<< "${HOST[$selected_key]}"
+            
+            # Leerzeichen entfernen (falls vorhanden)
+            server_name=$(echo "$server_name" | xargs)
+            server_ip=$(echo "$server_ip" | xargs)
+            server_domain=$(echo "$server_domain" | xargs)
+
+            # Beispiel: Variablen weiterverwenden
+            echo "--- Gespeicherte Variablen ---"
+            echo "Name:   $server_name"
+            echo "IP:     $server_ip"
+            echo "Domain: $server_domain"
+            break
+        else
+            echo "Ungültige Auswahl. Bitte versuche es erneut."
+        fi
+    done
+
+
+#select list_key in "${!HOST[@]}"; do
+#    if [[ -n "${HOST[$list_key]:-}" ]]; then
+#        # Werte aufteilen und Leerzeichen entfernen
+#        IFS=',' read -r list_name list_ip list_fqdn <<< "${HOST[$list_key]}"
+#        PARENTCN=$(echo "$list_name" | xargs)
+#        PARENTIP=$(echo "$list_ip" | xargs)
+#        PARENTZONE=$(echo "$list_fqdn" | xargs)
+#        break
+#    else
+#        echo "Ungültige Auswahl."
+#    fi
+#done < /dev/tty
+
+}
+
+
 while true
 do
     #Ist Return bereits gesetzt?
@@ -358,19 +407,8 @@ do
         
             #konfiguration           
             log "start autoconfig"
+            select_server
 
-            select list_key in "${!HOST[@]}"; do
-                if [[ -n "${HOST[$list_key]:-}" ]]; then
-                    # Werte aufteilen und Leerzeichen entfernen
-                    IFS=',' read -r list_name list_ip list_fqdn <<< "${HOST[$list_key]}"
-                    PARENTCN=$(echo "$list_name" | xargs)
-                    PARENTIP=$(echo "$list_ip" | xargs)
-                    PARENTZONE=$(echo "$list_fqdn" | xargs)
-                    break
-                else
-                    echo "Ungültige Auswahl."
-                fi
-            done < /dev/tty
             
             log "current vars"
             
