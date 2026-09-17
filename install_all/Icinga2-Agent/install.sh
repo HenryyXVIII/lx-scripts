@@ -375,7 +375,7 @@ select_server () {
         else
             echo "Ungültige Auswahl. Bitte versuche es erneut."
         fi
-    done
+    done < /dev/tty
 
 
 #select list_key in "${!HOST[@]}"; do
