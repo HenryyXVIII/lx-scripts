@@ -351,7 +351,7 @@ do
     log "Vorausgabe: $RETURN"
     if [ -z "${RETURN:-}" ]; then
         log "Variable Return nicht gesetzt"
-        read -p " - experimental - Do you want configure Agent (Yes,Wizard,No)? (Y/w/n) " RETURN < /dev/tty
+        read -p " - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n) " RETURN < /dev/tty
     fi
     case "$RETURN" in
         [Yy][Jj]|[Yy]|[Jj]|"")
@@ -360,19 +360,24 @@ do
             log "start autoconfig"
 
             echo "Bitte wähle einen Server:"
-            select s_key in "${!HOST[@]}"; do
-                if [ -n "$s_key" ]; then
+            select list_key in "${!HOST[@]}"; do
+                if [ -n "$list_key" ]; then
                     # Den String beim Komma aufteilen
-                    IFS=',' read -r s_name s_ip s_fqdn <<< "${HOST[$s_key]}"
+                    IFS=',' read -r list_name list_ip list_fqdn <<< "${HOST[$list_key]}"
                     
                     # Leerzeichen am Anfang der aufgeteilten Werte entfernen
-                    s_ip=$(echo "$s_ip" | xargs)
-                    s_fqdn=$(echo "$s_fqdn" | xargs)
+                    list_ip=$(echo "$list_ip" | xargs)
+                    list_fqdn=$(echo "$list_fqdn" | xargs)
                     
-                    echo "Ausgewählt: $s_key"
-                    echo "Name: $s_name"
-                    echo "IP:   $s_ip"
-                    echo "FQDN: $s_fqdn"
+                    echo "Ausgewählt: $list_key"
+                    echo "Name: $list_name"
+                    echo "IP:   $list_ip"
+                    echo "FQDN: $list_fqdn"
+                    
+                    PARENTCN="$list_name"
+                    PARENTIP="$list_ip"
+                    PARENTZONE="$list_fqdn"
+                    
                     break
                 else
                     echo "Ungültige Auswahl."
