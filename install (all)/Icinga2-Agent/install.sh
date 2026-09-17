@@ -159,6 +159,7 @@ log "Install for $ID"
 #####################
 
 apt_install_basics () {
+    #enterfunc
     log "$ID"
     log "Paketlisten Aktualisieren"
     log "Abhängikeiten installieren"
@@ -169,7 +170,7 @@ apt_install_basics () {
 
 #func-add-sourcelist deb/ubuntu
 add_sourcelists () {
-
+    #enterfunc
     wget -O ./icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+${ID}${VERSION_ID}.deb"
     log "icinga2 key downloaden"
     #installation key
@@ -190,6 +191,7 @@ add_sourcelists () {
 
 #func-install-icinga  deb/ubuntu
 install_icinga () {
+    #enterfunc
     echo "installation Icinga"
     apt update && apt -y install icinga2 monitoring-plugins
     log "installation icinga2 und monitoring plugins"
@@ -220,22 +222,22 @@ test_installed(){
 
 #function-dpkg-valid
 dpkg_valid () {
-
-PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin")
-
-for pkg in "${PACKAGES[@]}"; do
-    if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
-        log "Paket '$pkg' fehlt oder ist beschädigt. Starte Neuinstallation..."
-
-        apt-get update && apt-get install --reinstall -y "$pkg"
-        
-        if [ "$pkg" = "icinga2" ]; then
-        exit 1
+    #enterfunc
+    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin")
+    
+    for pkg in "${PACKAGES[@]}"; do
+        if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
+            log "Paket '$pkg' fehlt oder ist beschädigt. Starte Neuinstallation..."
+    
+            apt-get update && apt-get install --reinstall -y "$pkg"
+            
+            if [ "$pkg" = "icinga2" ]; then
+            exit 1
+            fi
+        else
+            log "Vorhanden: $pkg"
         fi
-    else
-        log "Vorhanden: $pkg"
-    fi
-done
+    done
 
 }
 
