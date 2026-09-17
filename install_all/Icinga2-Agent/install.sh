@@ -64,7 +64,7 @@ PARENTZONE=$PARENTCN
 PARENTPORT="5665"
 PKIPATH="/etc/icinga2/pki"
 CERTPATH="/var/lib/icinga2/certs"
-IP=$(ip -4 addr show scope global | awk '/inet / {print $2}' | cut -d/ -f1 | grep -E '^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)')
+
 
 if [ -n "$PARENTIP" ] && [ -z "$RETURN" ]; then
    RETURN='y'
@@ -456,10 +456,10 @@ log "Host erfolgreich konfiguriert"
 log "Hosteintrag in Director:"
 log "Hostname $AGENTCN"
 #log "Hostadresse $(hostname -i | awk '{print $1}')"
-log "Hostadresse $IP)"
+log "Hostadresse $(hostname -i)"
 log ""
 log "oder via Icingacli"
-log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $IP --imports linux_host"
+log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(hostname -i) --imports linux_host"
 log "----" 
 log "installation abgeschlossen"
 log "----"
