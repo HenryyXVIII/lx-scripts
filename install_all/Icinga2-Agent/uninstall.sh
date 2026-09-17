@@ -1,6 +1,9 @@
 #!/bin/bash
 
-## Autor
+## Autor: HenryyXVIII
+#
+# testet on debi, ubu, alpi
+# shell: bash
 
 # Colors for output
 RED='\033[0;31m'
