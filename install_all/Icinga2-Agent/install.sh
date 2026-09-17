@@ -52,7 +52,7 @@ EOF
 ########
 # VARS #
 ########
-VERSION=1.2.2
+VERSION=1.2.3
 
 RETURN=""
 DATE=$(date '+%F_%H-%M-%S')
@@ -66,10 +66,7 @@ PKIPATH="/etc/icinga2/pki"
 CERTPATH="/var/lib/icinga2/certs"
 
 
-if [ -n "$PARENTIP" ] && [ -z "$RETURN" ]; then
-   RETURN='y'
-   log "Autoconfig enabled"
-fi
+
 
 #if [ -n "$PARENTCN" ] && [ -z "$PARENTZONE" ]; then
 #   PARENTZONE=$PARENTCN
@@ -117,14 +114,27 @@ while [[ $# -gt 0 ]]; do
          esac
 done
 
-# sudo? #
+if [ -n "$PARENTIP" ] && [ -z "$RETURN" ]; then
+   RETURN='y'
+   log "Autoconfig enabled"
+fi
+
+echo "$VERSION"
+
+####################
+# test permissions #
+####################
+
+# for sudo
 #sudo -n true
 #test $? -eq 0 || {
 #    echo "you should have sudo privilege to run this script"
 #    exit 1
 #    }
 # Testet ob SUDO rechte
-echo "$VERSION"
+
+
+
 # test if runn as root #
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
