@@ -24,7 +24,7 @@ ICINGAFILES=("/etc/icinga2" "/var/lib/icinga2" "/var/log/icinga2")
 ############
 
 log() {
-    echo "=> [$(date '+%F %T')] $*" | tee -a "$LOGFILE"
+    echo -e "=> [$(date '+%F %T')] $*" | tee -a "$LOGFILE"
 }
 
 # Ensure script runs as root
