@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## Autor 
+## Autor
 
 
 
@@ -27,6 +27,8 @@ exit_trap {
 #  rm -rf "$TEMP_FILE"
   echo "ok"
 }
+
+
 ########
 # HELP #
 ########
@@ -63,6 +65,7 @@ EOF
 ########
 # VARS #
 ########
+VERSION=1.2.2
 
 RETURN=""
 DATE=$(date '+%F_%H-%M-%S')
@@ -134,7 +137,7 @@ done
 #    exit 1
 #    }
 # Testet ob SUDO rechte
-
+echo "$VERSION"
 # test if runn as root #
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
