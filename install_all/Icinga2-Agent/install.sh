@@ -1,6 +1,10 @@
 #!/bin/bash
 
-## Autor
+## Autor: HenryyXVIII
+#
+# testet on debi, ubu
+# shell: bash
+
 
 
 
