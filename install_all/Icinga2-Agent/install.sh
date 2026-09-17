@@ -65,6 +65,11 @@ PARENTPORT="5665"
 PKIPATH="/etc/icinga2/pki"
 CERTPATH="/var/lib/icinga2/certs"
 
+declare -A HOST
+HOST["server1"]="Satelit1, 192.168.1.1, Satelit1.test.lab"
+HOST["server2"]="Satelit2, 192.168.2.2, Satelit2.test.lab"
+HOST["server3"]="Satelit3, 192.168.3.3, Satelit1.test.lab"
+HOST["server4"]="Satelit4, 192.168.4.4, Satelit2.test.lab"
 
 
 
@@ -351,8 +356,29 @@ do
     case "$RETURN" in
         [Yy][Jj]|[Yy]|[Jj]|"")
         
-            #konfiguration
+            #konfiguration           
             log "start autoconfig"
+
+            echo "Bitte wähle einen Server:"
+            select s_key in "${!HOST[@]}"; do
+                if [ -n "$s_key" ]; then
+                    # Den String beim Komma aufteilen
+                    IFS=',' read -r s_name s_ip s_fqdn <<< "${HOST[$s_key]}"
+                    
+                    # Leerzeichen am Anfang der aufgeteilten Werte entfernen
+                    s_ip=$(echo "$s_ip" | xargs)
+                    s_fqdn=$(echo "$s_fqdn" | xargs)
+                    
+                    echo "Ausgewählt: $s_key"
+                    echo "Name: $s_name"
+                    echo "IP:   $s_ip"
+                    echo "FQDN: $s_fqdn"
+                    break
+                else
+                    echo "Ungültige Auswahl."
+                fi
+            done
+            
             log "current vars"
             
             echo "=> Host CN: $AGENTCN"
