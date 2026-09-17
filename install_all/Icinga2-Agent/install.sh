@@ -214,15 +214,16 @@ dpkg_valid () {
     
     for pkg in "${PACKAGES[@]}"; do
         if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
-            log "Paket '$pkg' fehlt oder ist beschädigt. Starte Neuinstallation..."
+            log "Paket '$pkg' is missing or corrupted. start reinstall"
     
             apt-get update && apt-get install --reinstall -y "$pkg"
             
             if [ "$pkg" = "icinga2" ]; then
+            echo "icinga reinstall, exiting"
             exit 1
             fi
         else
-            log "Vorhanden: $pkg"
+            log "Package: $pkg valid"
         fi
     done
 
