@@ -354,7 +354,8 @@ do
             echo "=> Cert Path: $CERTPATH"
 
             mkdir $CERTPATH
-            chown -aG nagios:nagios $CERTPATH
+            chown nagios:nagios $CERTPATH
+            chmod 755 $CERTPATH
 
             log "Hole Master-Zertifikat..."
             #icinga2 pki save-cert \
