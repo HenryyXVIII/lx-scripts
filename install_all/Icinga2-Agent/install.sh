@@ -351,10 +351,11 @@ log "installation done, choose how to proceed"
 
 select_server () {
 
-keys=("${!HOST[@]}")
-PS3="Bitte wähle einen Server aus (Nummer eingeben): "
+    #keys=("${!HOST[@]}")
+    readarray -t keys < <(printf '%s\n' "${!HOST[@]}" | sort -V)
+    PS3="Bitte wähle einen Server aus (Nummer eingeben): "
 
-# WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
+    # WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
     select selected_key in "${keys[@]}"; do
         if [[ -n "$selected_key" ]]; then
             echo "Du hast $selected_key ausgewählt."
@@ -386,22 +387,9 @@ PS3="Bitte wähle einen Server aus (Nummer eingeben): "
     echo "Domain: $server_domain"
     echo "PORT: $server_port"
 
-
-#select list_key in "${!HOST[@]}"; do
-#    if [[ -n "${HOST[$list_key]:-}" ]]; then
-#        # Werte aufteilen und Leerzeichen entfernen
-#        IFS=',' read -r list_name list_ip list_fqdn <<< "${HOST[$list_key]}"
-#        PARENTCN=$(echo "$list_name" | xargs)
-#        PARENTIP=$(echo "$list_ip" | xargs)
-#        PARENTZONE=$(echo "$list_fqdn" | xargs)
-#        break
-#    else
-#        echo "Ungültige Auswahl."
-#    fi
-#done < /dev/tty
-
 }
 
+###
 
 while true
 do
