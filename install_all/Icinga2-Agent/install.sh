@@ -22,7 +22,7 @@ set -o nounset
 # LOG-FILE #
 ############
 log() {
-    echo "=> [$(date '+%F %T')] $*" | tee -a "$LOGFILE"
+    echo -e "=> [$(date '+%F %T')] $*" | tee -a "$LOGFILE"
 }
 
 
