@@ -360,7 +360,8 @@ select_server () {
 
     #keys=("${!HOST[@]}")
     readarray -t keys < <(printf '%s\n' "${!HOST[@]}" | sort -V)
-    PS3="${PINK}please Type in the number of the icinga2-satelite you want to connect to (enter number): ${NC}"
+    echo "${PINK}-- please enter, ONLY NUMBERS --${NC}"
+    PS3="please Type in the number of the icinga2-satelite you want to connect to (enter number): "
 
     # WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
     select selected_key in "${keys[@]}"; do
@@ -401,10 +402,11 @@ select_server () {
 while true
 do
     #Ist Return bereits gesetzt?
-    log "Vorausgabe: $RETURN"
+    log "Debbug info value RETURN: $RETURN"
     if [ -z "${RETURN:-}" ]; then
         log "return not set via ops"
-        read -p "${GREEN} - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n) ${NC}" RETURN < /dev/tty
+        echo "${GREEN}-- please input y,w or n --${NC}"
+        read -p " - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n)" RETURN < /dev/tty
     fi
     case "$RETURN" in
         [Yy][Jj]|[Yy]|[Jj]|"")
