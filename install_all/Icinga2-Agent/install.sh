@@ -18,6 +18,8 @@ set -Eeuo pipefail
 set -o nounset
 #Abbruch Wenn Fehler
 
+trap 'echo "${RED}ERROR on line $LINENO: $BASH_COMMAND${NC}" >&2' ERR
+
 ############
 # LOG-FILE #
 ############
