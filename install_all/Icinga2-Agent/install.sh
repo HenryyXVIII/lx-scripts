@@ -440,7 +440,7 @@ catch_icingacmd () {
             break
         else
             echo "timeout/error"
-            read -p "command $@ failed, try again Y/n" RETRY < /dev/tty
+            read -p "command "$*" failed, try again Y/n" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
                     closeloop="true"
