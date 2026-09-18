@@ -240,11 +240,18 @@ test_installed(){
     #test sourcelist already exist
     FILE=/etc/apt/sources.list.d/${DIST}-icinga.list    
     if [ -f "$FILE" ]; then
-       log "${YELLOW}Icinga2 sourcelist file $FILE alreadyexists, skipping installation.${NC}"
+       log "${YELLOW}Icinga2 sourcelist file $FILE alreadyexists, skipping creating.${NC}"
     else
-       log "${GREEN}Icinga2 sourcelist file $FILE does not exist, start installation.${NC}"
+       log "${GREEN}Icinga2 sourcelist file $FILE does not exist, building....${NC}"
        add_sourcelists
     fi
+        #test icinga2 package installed?    
+    #if dpkg -s icinga-archive-keyring &>/dev/null; then
+    #    log "${YELLOW}The Icinga2 repo key is already installed, skipping installation.${NC}"
+    #else
+    #    log "${GREEN}The Icinga2 repo key missing, initialize installation.${NC}"
+    #    
+    #fi
     
     #test icinga2 package installed?    
     if dpkg -s icinga2 &>/dev/null; then
@@ -259,7 +266,7 @@ test_installed(){
 #function-dpkg-valid
 dpkg_valid () {
     #enterfunc
-    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin")
+    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin" "icinga2-common" "icinga2-doc")
     
     for pkg in "${PACKAGES[@]}"; do
         if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
