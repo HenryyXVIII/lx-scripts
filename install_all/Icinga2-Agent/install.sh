@@ -67,6 +67,7 @@ EOF
 VERSION=1.2.4
 
 RETURN=""
+SELHOST=""
 DATE=$(date '+%F_%H-%M-%S')
 LOGFILE="/var/log/icinga2-install-${DATE}.log"
 AGENTCN=$(hostname -f 2>/dev/null || cat /etc/hostname 2>/dev/null || hostname)
@@ -74,6 +75,8 @@ PARENTCN=""
 PARENTIP=""
 PARENTZONE=$PARENTCN
 PARENTPORT="5665"
+SATICINGANAME=""
+HOSTTEMPLATE=""
 PKIPATH="/etc/icinga2/pki"
 CERTPATH="/var/lib/icinga2/certs"
 
@@ -112,6 +115,10 @@ while [[ $# -gt 0 ]]; do
          ;;
        -r|--return)
          RETURN="$2"
+         shift 2
+         ;;
+       -s|--select)
+         SELHOST="$2"
          shift 2
          ;;
        -h|--help)
@@ -402,7 +409,7 @@ select_server () {
             server_domain=$(echo "$server_domain" | xargs)
             server_port=$(echo "$server_port" | xargs)
 
-
+            SATICINGANAME=$server_name
             PARENTCN=$server_domain
             PARENTIP=$server_ip
             PARENTZONE=$server_domain
@@ -522,9 +529,7 @@ do
 #              --csr "$PKIPATH/$AGENTCN.csr" \
 #              --ticket "$TICKET"
 
-            log "${PINK}please signe the request on your icinga2 master instance${NC}"
-            log "Tipp: icinga2 ca list"
-            log "Tipp: icinga2 ca signe <Fingerprint>"
+
             
 
             log "Starte Node Setup..."
@@ -590,15 +595,20 @@ done
 ########
 
 log "Host erfolgreich konfiguriert"
+log "---------------------------------"
+log "${PINK}please signe the request on your icinga2 master instance${NC}"
+log "Tipp: icinga2 ca list"
+log "Tipp: icinga2 ca signe <Fingerprint>"
+log "---------------------------------"
 log "Hosteintrag in Director:"
 log "Hostname $AGENTCN"
 log "Hostadresse $(hostname -i | awk '{print $1}')"
 #log "Hostadresse $(hostname -i)"
-log ""
+log "---------------------------------"
 log "oder via Icingacli"
-log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(hostname -i) --imports linux_host"
+log "icingacli director host create $AGENTCN --display_name $AGENTCN --address $(hostname -i) --imports $HOSTTEMPLATE --zone $SATICINGANAME"
 log "----" 
-log "installation abgeschlossen"
+log "setup done"
 log "----"
 
 exit
