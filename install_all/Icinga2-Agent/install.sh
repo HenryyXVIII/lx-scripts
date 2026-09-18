@@ -432,6 +432,7 @@ select_server () {
 }
 
 catch_icingacmd () {
+    closeloop=false
     while [ -z "$closeloop" ]; do
         log "execute: $*"
         if run_catch 5s $@; then
