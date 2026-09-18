@@ -84,12 +84,6 @@ HOST["server3"]="Satelit3, 192.168.3.3, Satelit3.test.lab, 5185"
 HOST["server4"]="Satelit4, 192.168.4.4, Satelit4.ofen.lab, 52265"
 
 
-
-#if [ -n "$PARENTCN" ] && [ -z "$PARENTZONE" ]; then
-#   PARENTZONE=$PARENTCN
-#   log "Parent Zone set to CNAME of PARENT"
-#fi
-
 ###############
 # Script Vars #
 ###############
@@ -162,6 +156,30 @@ if [ -z "$BASH" ]; then
   echo "${RED}Please use BASH, currently ${SHELL}${NC}."
   exit 3
 fi
+
+run_catch() {
+    local timeout_sec="$1"
+    #erstes Argument in var
+    shift
+    
+    local cmd=("$@")
+    local exit_code=0
+
+   
+    #wenn timeout das exitcode speichern
+    timeout "$timeout_sec" "${cmd[@]}" || exit_code=$?
+
+    # Auswertung des Exit-Codes
+    if [ "$exit_code" -eq 124 ]; then
+        echo "[CATCH] TIMEOUT: Der Befehl dauerte länger als ${timeout_sec}s!" >&2
+        return 124
+    elif [ "$exit_code" -ne 0 ]; then
+        echo "[CATCH] FEHLER: Befehl schlug fehl mit Exit-Code ${exit_code}!" >&2
+        return "$exit_code"
+    fi
+
+    return 0
+}
 
 ####################
 # read OS Env Vars #
@@ -350,17 +368,19 @@ else
 
 fi
 
+log "${GREEN}installation done succesfully, choose how to proceed${NC}"
+
 #################
 # CONFIGURATION #
 #################
 
-log "${GREEN}installation done succesfully, choose how to proceed${NC}"
+
 
 select_server () {
 
     #keys=("${!HOST[@]}")
     readarray -t keys < <(printf '%s\n' "${!HOST[@]}" | sort -V)
-    echo "${PINK}-- please enter, ONLY NUMBERS --${NC}"
+    echo -e "${PINK}-- please enter, ONLY NUMBERS --${NC}"
     PS3="please Type in the number of the icinga2-satelite you want to connect to (enter number): "
 
     # WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
@@ -444,10 +464,19 @@ do
             #  --trustedcert "$PKIPATH/trusted-parent.crt" \
             #  --host "$PARENTIP" \
             #  --port "$PARENTPORT"
-            icinga2 pki save-cert \
-              --trustedcert "$CERTPATH/ca.crt" \
-              --host "$PARENTIP" \
-              --port "$PARENTPORT"            
+            
+            #icinga2 pki save-cert \
+            #  --trustedcert "$CERTPATH/ca.crt" \
+            #  --host "$PARENTIP" \
+            #  --port "$PARENTPORT"            
+            
+            
+            if run_catch 5s icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT"; then
+                echo "cert receivet succesfully."
+            else
+                echo "timeout/error"
+               
+            fi
             
 
             log "generating local Key und CSR..."
