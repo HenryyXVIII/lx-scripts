@@ -443,8 +443,6 @@ catch_icingacmd () {
                     # Kein break nötig: Die while-Schleife läuft einfach von vorne an
                     ;;
             esac
-            
-           
         fi
     done
 }
