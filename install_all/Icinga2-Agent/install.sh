@@ -5,6 +5,12 @@
 # testet on debi, ubu
 # shell: bash
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+PINK='\035[1;35m'
+NC='\033[0;37m' # No Color
 
 
 
@@ -56,7 +62,7 @@ EOF
 ########
 # VARS #
 ########
-VERSION=1.2.3
+VERSION=1.2.4
 
 RETURN=""
 DATE=$(date '+%F_%H-%M-%S')
@@ -128,7 +134,7 @@ if [ -n "$PARENTIP" ] && [ -z "$RETURN" ]; then
    log "Autoconfig enabled"
 fi
 
-echo "Script is running on Version: $VERSION"
+echo "${GREEN}Script is running on Version: $VERSION${NC}"
 
 ####################
 # test permissions #
@@ -146,8 +152,13 @@ echo "Script is running on Version: $VERSION"
 
 # test if runn as root #
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
+   echo "${RED}This script must be run as root${NC}" 
    exit 1
+fi
+
+if [ -z "$BASH" ]; then
+  echo "${RED}Please use BASH, currently ${SHELL}${NC}."
+  exit 3
 fi
 
 ####################
@@ -156,9 +167,9 @@ fi
 
 source /etc/os-release
 
-log "OS detektion"
+log "${GREEN}OS detektion${NC}"
 log "detect $NAME"
-log "Install for $ID"
+log "${GREEN}Install for $ID${NC}"
 
 #####################
 # Install functions #
@@ -167,8 +178,8 @@ log "Install for $ID"
 apt_install_basics () {
     #enterfunc
     log "$ID"
-    log "Paketlisten Aktualisieren"
-    log "Abhängikeiten installieren"
+    log "${GREEN}Paketlisten Aktualisieren${NC}"
+    log "${GREEN}Abhängikeiten installieren${NC}"
     apt update && apt -y install apt-transport-https wget
 }
 
@@ -178,13 +189,13 @@ apt_install_basics () {
 add_sourcelists () {
     #enterfunc
     wget -O ./icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+${ID}${VERSION_ID}.deb"
-    log "icinga2 key downloaden"
+    log "${GREEN}icinga2 key downloaden${NC}"
     #installation key
     apt -y install ./icinga-archive-keyring.deb
-    log "installation key"
+    log "${GREEN}installation key${NC}"
     
     rm ./icinga-archive-keyring.deb
-    log "löschen des keys"
+    log "${GREEN}löschen des keys${NC}"
            
     #Icinga in die apt sourecliste
     echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/${ID} icinga-${DIST} main" > \
@@ -192,15 +203,14 @@ add_sourcelists () {
       
     echo "deb-src [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/${ID} icinga-${DIST} main" >> \
     /etc/apt/sources.list.d/${DIST}-icinga.list
-    log "schreiben der source list"
+    log "${GREEN}schreiben der source list"
 }
 
 #func-install-icinga  deb/ubuntu
 install_icinga () {
     #enterfunc
-    echo "installation Icinga"
+    echo "${GREEN}installation Icinga and monitoring plugins${NC}"
     apt update && apt -y install icinga2 monitoring-plugins
-    log "installation icinga2 und monitoring plugins"
     #verifizierung
     icinga2 daemon -C
 }
@@ -210,17 +220,17 @@ test_installed(){
     #test sourcelist already exist
     FILE=/etc/apt/sources.list.d/${DIST}-icinga.list    
     if [ -f "$FILE" ]; then
-       log "Icinga2 sourcelist file $FILE alreadyexists, skipping installation."
+       log "${YELLOW}Icinga2 sourcelist file $FILE alreadyexists, skipping installation.${NC}"
     else
-       log "Icinga2 sourcelist file $FILE does not exist, start installation."
+       log "${GREEN}Icinga2 sourcelist file $FILE does not exist, start installation.${NC}"
        add_sourcelists
     fi
     
     #test icinga2 package installed?    
     if dpkg -s icinga2 &>/dev/null; then
-        log "The Icinga2 package is already installed, skipping installation."
+        log "${YELLOW}The Icinga2 package is already installed, skipping installation.${NC}"
     else
-        log "The Icinga2 package is not installed, initialize installation"
+        log "${GREEN}The Icinga2 package is not installed, initialize installation.${NC}"
         install_icinga
     fi
 
@@ -233,16 +243,12 @@ dpkg_valid () {
     
     for pkg in "${PACKAGES[@]}"; do
         if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
-            log "Paket '$pkg' is missing or corrupted. start reinstall"
+            log "${YELLOW}Paket '$pkg' is missing or corrupted. start reinstall${NC}"
     
             apt-get update && apt-get install --reinstall -y "$pkg"
             
-            if [ "$pkg" = "icinga2" ]; then
-            echo "icinga reinstall, exiting"
-            exit 1
-            fi
         else
-            log "Package: $pkg valid"
+            log "${GREEN}Package: $pkg valid${NC}"
         fi
     done
 
@@ -337,8 +343,8 @@ elif [ "$ID" = "alpine" ]; then
 else
     log "$ID"
     exit 1
-    log "fehlgeschlagen"
-    log "distro not found"
+    log "${RED}failed${NC}"
+    log "${YELLOW}distro not found${NC}"
 
 fi
 
@@ -346,19 +352,18 @@ fi
 # CONFIGURATION #
 #################
 
-log "erfolgreich"
-log "installation done, choose how to proceed"
+log "${GREEN}installation done succesfully, choose how to proceed${NC}"
 
 select_server () {
 
     #keys=("${!HOST[@]}")
     readarray -t keys < <(printf '%s\n' "${!HOST[@]}" | sort -V)
-    PS3="Bitte wähle einen Server aus (Nummer eingeben): "
+    PS3="${PINK}please Type in the number of the icinga2-satelite you want to connect to (enter number): ${NC}"
 
     # WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
     select selected_key in "${keys[@]}"; do
         if [[ -n "$selected_key" ]]; then
-            echo "Du hast $selected_key ausgewählt."
+            echo "you choose the satelite: $selected_key ."
             
             IFS=',' read -r server_name server_ip server_domain server_port <<< "${HOST[$selected_key]}"
             
@@ -377,11 +382,11 @@ select_server () {
             
             break
         else
-            echo "Ungültige Auswahl. Bitte versuche es erneut."
+            echo "${RED}invalid selection, please try again.${NC}"
         fi
     done < /dev/tty
     
-    echo "--- Gespeicherte Variablen ---"
+    echo "--- ${GREEN}icinga2-satelite detailes${NC} ---"
     echo "Name:   $server_name"
     echo "IP:     $server_ip"
     echo "Domain: $server_domain"
@@ -396,8 +401,8 @@ do
     #Ist Return bereits gesetzt?
     log "Vorausgabe: $RETURN"
     if [ -z "${RETURN:-}" ]; then
-        log "Variable Return nicht gesetzt"
-        read -p " - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n) " RETURN < /dev/tty
+        log "return not set via ops"
+        read -p "${GREEN} - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n) ${NC}" RETURN < /dev/tty
     fi
     case "$RETURN" in
         [Yy][Jj]|[Yy]|[Jj]|"")
@@ -419,18 +424,18 @@ do
             
                 
             if [ ! -d "$CERTPATH" ]; then
-                log "The certificat directory $CERTPATH does not exist, creating"
+                log "${YELLOW}The certificat directory $CERTPATH does not exist, creating${NC}"
                 mkdir $CERTPATH
                 chown nagios:nagios $CERTPATH
                 chmod 755 $CERTPATH
             else
-               log "The directory for the certifcates $CERTPATH exist, skipping creating"
+               log "${GREEN}The directory for the certifcates $CERTPATH exist, skipping creating${NC}"
               
             fi
             
 
 
-            log "Hole Master-Zertifikat..."
+            log "getting master certificat"
             #icinga2 pki save-cert \
             #  --trustedcert "$PKIPATH/trusted-parent.crt" \
             #  --host "$PARENTIP" \
@@ -441,7 +446,7 @@ do
               --port "$PARENTPORT"            
             
 
-            log "Generiere lokalen Key und CSR..."
+            log "generating local Key und CSR..."
             icinga2 pki new-cert \
               --cn "$AGENTCN" \
               --key "$CERTPATH/$AGENTCN.key" \
@@ -461,8 +466,9 @@ do
 #              --csr "$PKIPATH/$AGENTCN.csr" \
 #              --ticket "$TICKET"
 
-            log "Signiere certifikat auf dem Icinga Master!"
+            log "${PINK}please signe the request on your icinga2 master instance${NC}"
             log "Tipp: icinga2 ca list"
+            log "Tipp: icinga2 ca signe <Fingerprint>"
             
 
             log "Starte Node Setup..."
@@ -478,7 +484,7 @@ do
               --disable-confd 
 
             
-            log "Node Setup erfolgreich abgeschlossen!"
+            log "${GREEN}Node Setup erfolgreich abgeschlossen!${NC}"
 
             icinga2 daemon -C
             log "config validierung"
@@ -497,7 +503,7 @@ do
                 log "Verwende Systemd für $ID"
                 systemctl restart icinga2.service
             else
-                log "service neustart fehlgeschlagen, OS unbekannt: $ID"
+                log "${RED}service neustart fehlgeschlagen, OS unbekannt: $ID${NC}"
                 exit 1
             fi
 
@@ -518,7 +524,7 @@ do
         *)
             #falsche eingabe
           
-            log "eingabe ungültig"
+            log "${RED}eingabe ungültig${NC}"
             ;;
     esac
 done
@@ -530,8 +536,8 @@ done
 log "Host erfolgreich konfiguriert"
 log "Hosteintrag in Director:"
 log "Hostname $AGENTCN"
-#log "Hostadresse $(hostname -i | awk '{print $1}')"
-log "Hostadresse $(hostname -i)"
+log "Hostadresse $(hostname -i | awk '{print $1}')"
+#log "Hostadresse $(hostname -i)"
 log ""
 log "oder via Icingacli"
 log "icingacli director host create --name $AGENTCN --display_name $AGENTCN --address $(hostname -i) --imports linux_host"
