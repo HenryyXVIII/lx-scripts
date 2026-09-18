@@ -432,7 +432,7 @@ select_server () {
 }
 
 catch_icingacmd () {
-    closeloop=false
+    local closeloop=""
     while [ -z "$closeloop" ]; do
         log "execute: $*"
         if run_catch 5s $@; then
@@ -443,8 +443,7 @@ catch_icingacmd () {
             read -p "command $@ failed, try again Y/n" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
-                    log "${RED}Aktion vom Benutzer abgebrochen. Beende Skript.${NC}"
-                    exit 1
+                    closeloop="true"
                     ;;
                 *)
                     log "Wiederhole Befehl..."
