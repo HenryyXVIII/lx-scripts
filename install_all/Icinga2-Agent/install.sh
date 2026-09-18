@@ -424,6 +424,32 @@ select_server () {
 
 }
 
+catch_icingacmd () {
+    while [ -z "$closeloop" ]; do
+        log "execute: $*"
+        if run_catch 5s $@; then
+            echo -e "${GREEN}Befehl erfolgreich ausgeführt.${NC}"
+            break
+        else
+            echo "timeout/error"
+            read -p "command $@ failed, try again Y/n" RETRY < /dev/tty
+            case "$RETRY" in
+                [Nn]*)
+                    log "${RED}Aktion vom Benutzer abgebrochen. Beende Skript.${NC}"
+                    exit 1
+                    ;;
+                *)
+                    log "Wiederhole Befehl..."
+                    # Kein break nötig: Die while-Schleife läuft einfach von vorne an
+                    ;;
+            esac
+            
+           
+        fi
+    done
+}
+
+
 ###
 
 while true
@@ -456,7 +482,7 @@ do
                 
             if [ ! -d "$CERTPATH" ]; then
                 log "${YELLOW}The certificat directory $CERTPATH does not exist, creating${NC}"
-                mkdir $CERTPATH
+                mkdir -p "$CERTPATH"
                 chown nagios:nagios $CERTPATH
                 chmod 755 $CERTPATH
             else
@@ -471,26 +497,18 @@ do
             #  --trustedcert "$PKIPATH/trusted-parent.crt" \
             #  --host "$PARENTIP" \
             #  --port "$PARENTPORT"
+            #depcricated pki path
             
             #icinga2 pki save-cert \
             #  --trustedcert "$CERTPATH/ca.crt" \
             #  --host "$PARENTIP" \
-            #  --port "$PARENTPORT"            
-            
-            
-            if run_catch 5s icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT"; then
-                echo "cert receivet succesfully."
-            else
-                echo "timeout/error"
-               
-            fi
+            #  --port "$PARENTPORT"
+            #new cert path but without catch
+            catch_icingacmd icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT"
             
 
             log "generating local Key und CSR..."
-            icinga2 pki new-cert \
-              --cn "$AGENTCN" \
-              --key "$CERTPATH/$AGENTCN.key" \
-              --csr "$CERTPATH/$AGENTCN.csr"
+            catch_icingacmd icinga2 pki new-cert --cn "$AGENTCN" --key "$CERTPATH/$AGENTCN.key" --csr "$CERTPATH/$AGENTCN.csr"
             
 
             log "Sende PKI-Request an Master..."
@@ -512,7 +530,7 @@ do
             
 
             log "Starte Node Setup..."
-            icinga2 node setup \
+            catch_icingacmd icinga2 node setup \
               --cn "$AGENTCN" \
               --endpoint "$PARENTCN,$PARENTIP,$PARENTPORT" \
               --zone "$AGENTCN" \
