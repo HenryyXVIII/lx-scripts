@@ -64,7 +64,7 @@ EOF
 ########
 # VARS #
 ########
-VERSION=1.2.4
+VERSION=1.2.5
 
 RETURN=""
 SELHOST=""
