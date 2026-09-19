@@ -38,11 +38,10 @@ Verwendung:
   $(basename "$0") [OPTIONEN]
 
 Optionen:
-  -H, --parenthost IP     IP-Adresse des Parent-Hosts (Satelit)
+  -H, --parenthost_IP     IP-Adresse des Parent-Hosts (Satelit)
   -p, --port PORT         Port des Parent-Hosts (Satelit) default 5665
   -pcn, --parentcn NAME   DNS Name des Parent-Host (Satelit)
-  -z, --zone ZONE         Parent-Zone (Zone des Parents)
-  -l, --localzone NAME    Lokale Zone 
+  -a, --agentcname        Agent FQDN
   -r, --return y|w|n      y=Autoconfig w=node Wizard n=nein
 
   => IF PARENT-HOST IP (-H) IS SET AUTOCONFIGURE WILL BE STARTET AUTOMATIC <=
@@ -92,7 +91,7 @@ HOST["server4"]="Satelit4, 192.168.4.4, Satelit4.ofen.lab, 52265"
 
 while [[ $# -gt 0 ]]; do
    case "$1" in
-      -H|--parenthost)
+      -H|--parenthost_IP)
          PARENTIP="$2"
          shift 2
          ;;
@@ -108,7 +107,7 @@ while [[ $# -gt 0 ]]; do
          PARENTZONE="$2"
          shift 2
          ;;
-      -l|--localzone)
+      -a|--agentcname)
          AGENTCN="$2"
          shift 2
          ;;
