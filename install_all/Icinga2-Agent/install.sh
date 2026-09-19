@@ -18,7 +18,7 @@ set -Eeuo pipefail
 set -o nounset
 #Abbruch Wenn Fehler
 
-trap 'echo "${RED}ERROR on line $LINENO: $BASH_COMMAND${NC}" >&2' ERR
+trap 'echo -e "${RED}ERROR on line $LINENO: $BASH_COMMAND${NC}" >&2' ERR
 
 ############
 # LOG-FILE #
@@ -151,12 +151,12 @@ echo "${GREEN}Script is running on Version: $VERSION${NC}"
 
 # test if runn as root #
 if [[ $EUID -ne 0 ]]; then
-   echo "${RED}This script must be run as root${NC}" 
+   echo -e "${RED}This script must be run as root${NC}" 
    exit 1
 fi
 
 if [ -z "$BASH" ]; then
-  echo "${RED}Please use BASH, currently ${SHELL}${NC}."
+  echo -e "${RED}Please use BASH, currently ${SHELL}${NC}."
   exit 3
 fi
 
