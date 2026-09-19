@@ -86,7 +86,6 @@ HOST["server2"]="Satelit2, 192.168.2.2, Satelit2.herd.lab, 9911"
 HOST["server3"]="Satelit3, 192.168.3.3, Satelit3.test.lab, 5185"
 HOST["server4"]="Satelit4, 192.168.4.4, Satelit4.ofen.lab, 52265"
 
-
 ###############
 # Script Vars #
 ###############
@@ -151,8 +150,6 @@ echo "${GREEN}Script is running on Version: $VERSION${NC}"
 #    }
 # Testet ob SUDO rechte
 
-
-
 # test if runn as root #
 if [[ $EUID -ne 0 ]]; then
    echo "${RED}This script must be run as root${NC}" 
@@ -194,7 +191,6 @@ run_catch() {
 
 source /etc/os-release
 
-echo "$HOST"
 
 log "${GREEN}OS detektion${NC}"
 log "detect $NAME"
@@ -217,8 +213,7 @@ apt_install_keyring () {
     log "${GREEN}icinga2 key downloaden${NC}"
     #installation key
     apt -y install ./icinga-archive-keyring.deb
-    log "${GREEN}installation key${NC}"
-    
+    log "${GREEN}installation key${NC}"    
     rm ./icinga-archive-keyring.deb
     log "${GREEN}löschen des keys${NC}"
 
