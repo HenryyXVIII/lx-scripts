@@ -446,7 +446,7 @@ catch_icingacmd () {
             break
         else
             echo "timeout/error"
-            read -p "command "$*" failed, try again Y/n" RETRY < /dev/tty
+            read -p "command \"$*\" failed, try again Y/n" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
                     closeloop="true"
@@ -515,11 +515,11 @@ do
             #  --host "$PARENTIP" \
             #  --port "$PARENTPORT"
             #new cert path but without catch
-            catch_icingacmd "icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT""
+            catch_icingacmd icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT"
             
 
             log "generating local Key und CSR..."
-            catch_icingacmd "icinga2 pki new-cert --cn "$AGENTCN" --key "$CERTPATH/$AGENTCN.key" --csr "$CERTPATH/$AGENTCN.csr""
+            catch_icingacmd icinga2 pki new-cert --cn "$AGENTCN" --key "$CERTPATH/$AGENTCN.key" --csr "$CERTPATH/$AGENTCN.csr"
             
 
             log "Sende PKI-Request an Master..."
