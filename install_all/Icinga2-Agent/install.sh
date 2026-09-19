@@ -437,7 +437,8 @@ catch_icingacmd () {
     local closeloop=""
     while [ -z "$closeloop" ]; do
         log "execute: $@"
-        if run_catch 5s $@; then
+        log "timeout set to 10s"
+        if run_catch 10s $@; then
             echo -e "${GREEN}Befehl erfolgreich ausgeführt.${NC}"
             break
         else
