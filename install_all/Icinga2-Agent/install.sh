@@ -396,7 +396,7 @@ select_server () {
 
     #keys=("${!HOST[@]}")
     readarray -t keys < <(printf '%s\n' "${!HOST[@]}" | sort -V)
-    echo -e "${PINK}-- please enter, ONLY NUMBERS --${NC}"
+    echo -e "${GREEN}-- please enter, ONLY NUMBERS --${NC}"
     PS3="please Type in the number of the icinga2-satelite you want to connect to (enter number): "
 
     # WICHTIG: Am Ende der select-Schleife "< /dev/tty" hinzufügen
