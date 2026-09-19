@@ -445,7 +445,8 @@ catch_icingacmd () {
             read -p "command \"$*\" failed, try again Y/n :" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
-                    closeloop="true"
+                    #closeloop="true"
+                    break
                     ;;
                 *)
                     log "Wiederhole Befehl..."
@@ -465,8 +466,8 @@ do
     log "Debbug info value RETURN: $RETURN"
     if [ -z "${RETURN:-}" ]; then
         log "return not set via ops"
-        log "${PINK}-- please input y,w or n --${NC}"
-        read -p " - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n)" RETURN < /dev/tty
+        log "${GREEN}-- please input y,w or n --${NC}"
+        read -p "${GREEN}Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n): ${NC}" RETURN < /dev/tty
     fi
     case "$RETURN" in
         [Yy][Jj]|[Yy]|[Jj]|"")
@@ -598,7 +599,7 @@ done
 
 log "Host erfolgreich konfiguriert"
 log "---------------------------------"
-log "${PINK}please signe the request on your icinga2 master instance${NC}"
+log "${GREEN}please signe the request on your icinga2 master instance${NC}"
 log "Tipp: icinga2 ca list"
 log "Tipp: icinga2 ca signe <Fingerprint>"
 log "---------------------------------"
@@ -608,7 +609,7 @@ log "Hostadresse $(hostname -i | awk '{print $1}')"
 #log "Hostadresse $(hostname -i)"
 log "---------------------------------"
 log "oder via Icingacli"
-log "${PINK}icingacli director host create ${AGENTCN} --display_name ${AGENTCN} --address $(hostname -i) --imports ${HOSTTEMPLATE} --zone ${SATICINGANAME}${NC}"
+log "${GREEN}icingacli director host create ${AGENTCN} --display_name ${AGENTCN} --address $(hostname -i) --imports ${HOSTTEMPLATE} --zone ${SATICINGANAME}${NC}"
 log "---------------------------------" 
 log "       == setup done =="
 log "---------------------------------"
