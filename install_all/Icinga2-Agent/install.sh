@@ -210,11 +210,7 @@ apt_install_basics () {
     apt update && apt -y install apt-transport-https wget
 }
 
-
-
-#func-add-sourcelist deb/ubuntu
-add_sourcelists () {
-    #enterfunc
+apt_install_keyring () {
     wget -O ./icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+${ID}${VERSION_ID}.deb"
     log "${GREEN}icinga2 key downloaden${NC}"
     #installation key
@@ -223,7 +219,13 @@ add_sourcelists () {
     
     rm ./icinga-archive-keyring.deb
     log "${GREEN}löschen des keys${NC}"
-           
+
+}
+
+
+#func-add-sourcelist deb/ubuntu
+add_sourcelists () {
+
     #Icinga in die apt sourecliste
     echo "deb [signed-by=/usr/share/keyrings/icinga-archive-keyring.gpg] https://packages.icinga.com/${ID} icinga-${DIST} main" > \
     /etc/apt/sources.list.d/${DIST}-icinga.list
@@ -243,6 +245,15 @@ install_icinga () {
 }
 
 test_installed(){
+    #test keyring is installed
+    if dpkg -s icinga-archive-keyring &>/dev/null; then
+        log "${YELLOW}The Icinga2 repo key is already installed, skipping installation.${NC}"
+    else
+        apt_install_keyring
+        log "${GREEN}The Icinga2 repo key missing, initialize installation.${NC}"
+        
+    fi
+
 
     #test sourcelist already exist
     FILE=/etc/apt/sources.list.d/${DIST}-icinga.list    
@@ -252,13 +263,8 @@ test_installed(){
        log "${GREEN}Icinga2 sourcelist file $FILE does not exist, building....${NC}"
        add_sourcelists
     fi
-        #test icinga2 package installed?    
-    #if dpkg -s icinga-archive-keyring &>/dev/null; then
-    #    log "${YELLOW}The Icinga2 repo key is already installed, skipping installation.${NC}"
-    #else
-    #    log "${GREEN}The Icinga2 repo key missing, initialize installation.${NC}"
-    #    
-    #fi
+ 
+
     
     #test icinga2 package installed?    
     if dpkg -s icinga2 &>/dev/null; then
