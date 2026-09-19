@@ -467,7 +467,7 @@ do
     if [ -z "${RETURN:-}" ]; then
         log "return not set via ops"
         log "${GREEN}-- please input y,w or n --${NC}"
-        read -p "${GREEN}Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n): ${NC}" RETURN < /dev/tty
+        read -p "Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n): " RETURN < /dev/tty
     fi
     case "$RETURN" in
         [Yy][Jj]|[Yy]|[Jj]|"")
@@ -520,32 +520,12 @@ do
             
 
             log "Sende PKI-Request an Master..."
-
-              
-#            icinga2 pki request \
-#              --host "$PARENTIP" \
-#              --port "$PARENTPORT" \
-#              --trustedcert "$PKIPATH/trusted-parent.crt" \
-#              --cert "$PKIPATH/$AGENTCN.crt" \
-#              --key "$PKIPATH/$AGENTCN.key" \
-#              --ca "$PKIPATH/ca.crt" 
-#              --csr "$PKIPATH/$AGENTCN.csr" \
-#              --ticket "$TICKET"
-
-
-            
+           
 
             log "Starte Node Setup..."
             catch_icingacmd icinga2 node setup \
-              --cn "$AGENTCN" \
-              --endpoint "$PARENTCN,$PARENTIP,$PARENTPORT" \
-              --zone "$AGENTCN" \
-              --parent_zone "$PARENTZONE" \
-              --parent_host "$PARENTCN" \
-              --trustedcert "$CERTPATH/ca.crt" \
-              --accept-commands \
-              --accept-config \
-              --disable-confd 
+              --cn "$AGENTCN" --endpoint "$PARENTCN,$PARENTIP,$PARENTPORT" --zone "$AGENTCN" --parent_zone "$PARENTZONE" \
+              --parent_host "$PARENTCN" --trustedcert "$CERTPATH/ca.crt" --accept-commands --accept-config --disable-confd 
 
             
             log "${GREEN}Node Setup erfolgreich abgeschlossen!${NC}"
