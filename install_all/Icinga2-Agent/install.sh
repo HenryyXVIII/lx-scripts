@@ -194,6 +194,8 @@ run_catch() {
 
 source /etc/os-release
 
+echo "$HOST"
+
 log "${GREEN}OS detektion${NC}"
 log "detect $NAME"
 log "${GREEN}Install for $ID${NC}"
