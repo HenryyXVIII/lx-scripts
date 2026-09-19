@@ -434,7 +434,7 @@ select_server () {
 catch_icingacmd () {
     local closeloop=""
     while [ -z "$closeloop" ]; do
-        log "execute: $*"
+        log "execute: $@"
         if run_catch 5s $@; then
             echo -e "${GREEN}Befehl erfolgreich ausgeführt.${NC}"
             break
