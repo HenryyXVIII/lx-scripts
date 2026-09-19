@@ -247,7 +247,7 @@ install_icinga () {
 test_installed(){
     #test keyring is installed
     if dpkg -s icinga-archive-keyring &>/dev/null; then
-        log "${YELLOW}The Icinga2 repo key is already installed, skipping installation.${NC}"
+        log "${YELLOW}The Icinga2 repo key is already installed, skipping....${NC}"
     else
         apt_install_keyring
         log "${GREEN}The Icinga2 repo key missing, initialize installation.${NC}"
@@ -258,9 +258,9 @@ test_installed(){
     #test sourcelist already exist
     FILE=/etc/apt/sources.list.d/${DIST}-icinga.list    
     if [ -f "$FILE" ]; then
-       log "${YELLOW}Icinga2 sourcelist file $FILE alreadyexists, skipping creating.${NC}"
+       log "${YELLOW}Icinga2 sourcelist file $FILE alreadyexists, skipping....${NC}"
     else
-       log "${GREEN}Icinga2 sourcelist file $FILE does not exist, building....${NC}"
+       log "${GREEN}Icinga2 sourcelist file $FILE does not exist, creating source file${NC}"
        add_sourcelists
     fi
  
@@ -268,9 +268,9 @@ test_installed(){
     
     #test icinga2 package installed?    
     if dpkg -s icinga2 &>/dev/null; then
-        log "${YELLOW}The Icinga2 package is already installed, skipping installation.${NC}"
+        log "${YELLOW}The Icinga2 package is already installed, skipping....${NC}"
     else
-        log "${GREEN}The Icinga2 package is not installed, initialize installation.${NC}"
+        log "${GREEN}The Icinga2 package is not installed, install packages.${NC}"
         install_icinga
     fi
 
