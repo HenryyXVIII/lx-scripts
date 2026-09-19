@@ -442,7 +442,7 @@ catch_icingacmd () {
             break
         else
             echo "timeout/error"
-            read -p "command \"$*\" failed, try again Y/n" RETRY < /dev/tty
+            read -p "command \"$*\" failed, try again Y/n :" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
                     closeloop="true"
@@ -465,7 +465,7 @@ do
     log "Debbug info value RETURN: $RETURN"
     if [ -z "${RETURN:-}" ]; then
         log "return not set via ops"
-        echo "${GREEN}-- please input y,w or n --${NC}"
+        log "${PINK}-- please input y,w or n --${NC}"
         read -p " - experimental - Do you want configure Agent (Yes,Node-Wizard,No)? (Y/w/n)" RETURN < /dev/tty
     fi
     case "$RETURN" in
@@ -608,9 +608,9 @@ log "Hostadresse $(hostname -i | awk '{print $1}')"
 #log "Hostadresse $(hostname -i)"
 log "---------------------------------"
 log "oder via Icingacli"
-log "icingacli director host create $AGENTCN --display_name $AGENTCN --address $(hostname -i) --imports $HOSTTEMPLATE --zone $SATICINGANAME"
-log "----" 
-log "setup done"
-log "----"
+log "${PINK}icingacli director host create ${AGENTCN} --display_name ${AGENTCN} --address $(hostname -i) --imports ${HOSTTEMPLATE} --zone ${SATICINGANAME}${NC}"
+log "---------------------------------" 
+log "       == setup done =="
+log "---------------------------------"
 
 exit
