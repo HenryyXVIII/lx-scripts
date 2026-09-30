@@ -24,7 +24,7 @@ trap 'echo -e "${RED}ERROR on line $LINENO: $BASH_COMMAND${NC}" >&2' ERR
 # LOG-FILE #
 ############
 log() {
-    echo -e "=> [$(date '+%F %T')] $*" | tee -a "$LOGFILE"
+    echo -e "= [$(date '+%F %T')] => $*" | tee -a "$LOGFILE"
 }
 
 
@@ -63,7 +63,7 @@ EOF
 ########
 # VARS #
 ########
-VERSION=1.2.5
+VERSION=1.2.6
 
 RETURN=""
 SELHOST=""
@@ -135,7 +135,7 @@ if [ -n "$PARENTIP" ] && [ -z "$RETURN" ]; then
    log "Autoconfig enabled"
 fi
 
-echo "${GREEN}Script is running on Version: $VERSION${NC}"
+log "${GREEN}Script is running on Version: $VERSION${NC}"
 
 ####################
 # test permissions #
@@ -443,7 +443,7 @@ catch_icingacmd () {
             break
         else
             echo "timeout/error"
-            read -p "command \"$*\" failed, try again Y/n :" RETRY < /dev/tty
+            read -p "command \"$@\" failed, try again Y/n :" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
                     #closeloop="true"
