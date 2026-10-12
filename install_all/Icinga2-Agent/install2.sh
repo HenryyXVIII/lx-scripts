@@ -59,3 +59,32 @@ Beispiel:
     -r y
 EOF
 }
+
+
+VERSION="2.2.6"
+ONLYINSTALL=
+DATE=$(date '+%F_%H-%M-%S')
+LOGFILE="/var/log/icinga2-install-${DATE}.log"
+HOSTFQDN=$(hostname -f 2>/dev/null || cat /etc/hostname 2>/dev/null || hostname)
+
+#VarsConnect
+
+HOSTTEMPLATE=""
+PKIPATH="/etc/icinga2/pki"
+CERTPATH="/var/lib/icinga2/certs"
+
+RETURN=""
+SELHOST=""
+SATELITEIP=
+SATELITEFQDN=""
+
+declare -A SATELITES
+
+SATELITE
+
+
+declare -A HOST
+HOST["server1"]="Satelit1, 192.168.1.1, Satelit1.test.lab, 5665"
+HOST["server2"]="Satelit2, 192.168.2.2, Satelit2.herd.lab, 9911"
+HOST["server3"]="Satelit3, 192.168.3.3, Satelit3.test.lab, 5185"
+HOST["server4"]="Satelit4, 192.168.4.4, Satelit4.ofen.lab, 52265"
