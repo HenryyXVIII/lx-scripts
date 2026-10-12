@@ -443,13 +443,14 @@ catch_icingacmd () {
             break
         else
             echo "timeout/error"
-            read -p "command \"$@\" failed, try again Y/n :" RETRY < /dev/tty
+            echo "following command failed: $@"
+            read -p "try again Y/n :" RETRY < /dev/tty
             case "$RETRY" in
                 [Nn]*)
                     #closeloop="true"
                     break
                     ;;
-                *)
+                [Yy]*)
                     log "Wiederhole Befehl..."
                     # Kein break nötig: Die while-Schleife läuft einfach von vorne an
                     ;;
@@ -524,8 +525,7 @@ do
            
 
             log "Starte Node Setup..."
-            catch_icingacmd icinga2 node setup \
-              --cn "$AGENTCN" --endpoint "$PARENTCN,$PARENTIP,$PARENTPORT" --zone "$AGENTCN" --parent_zone "$PARENTZONE" \
+            catch_icingacmd icinga2 node setup --cn "$AGENTCN" --endpoint "$PARENTCN,$PARENTIP,$PARENTPORT" --zone "$AGENTCN" --parent_zone "$PARENTZONE" \
               --parent_host "$PARENTCN" --trustedcert "$CERTPATH/ca.crt" --accept-commands --accept-config --disable-confd 
 
             
