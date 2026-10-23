@@ -24,9 +24,25 @@ trap 'echo -e "${RED}ERROR on line $LINENO: $BASH_COMMAND${NC}" >&2' ERR
 # LOG-FILE #
 ############
 log() {
-    echo -e "= [$(date '+%F %T')] => $*" | tee -a "$LOGFILE"
+  echo -e "= [$(date '+%F %T')] => $*" | tee -a "$LOGFILE"
 }
 
+if [ ! -f /etc/os-release ]; then
+  exitsc "${RED}could not find os-release file${NC}"
+fi
+
+source /etc/os-release
+
+# is $VERSION_ID?
+#if [ -z  $VERSION_ID ]; then
+#  log "no VERSION_ID found"
+#fi
+
+# is $DIST ?
+
+#if [ -z  $DIST ]; then
+#  log "no VERSION_ID found"
+#fi
 
 ########
 # HELP #
@@ -60,13 +76,21 @@ Beispiel:
 EOF
 }
 
+getip () {
+  if ip addr show $(ip route | awk '/default/ { print $5 }') | grep "inet" | head -n 1 | awk '/inet/ {print $2}' | cut -d'/' -f1 ; then
+    HOSTIP=$(ip addr show $(ip route | awk '/default/ { print $5 }') | grep "inet" | head -n 1 | awk '/inet/ {print $2}' | cut -d'/' -f1)
+  else
+    HOSTIP=$(hostname -i)
+  fi
+}
 
 VERSION="2.2.6"
 ONLYINSTALL=
 DATE=$(date '+%F_%H-%M-%S')
 LOGFILE="/var/log/icinga2-install-${DATE}.log"
 HOSTFQDN=$(hostname -f 2>/dev/null || cat /etc/hostname 2>/dev/null || hostname)
-HOSTIP=$(ip addr show $(ip route | awk '/default/ { print $5 }') | grep "inet" | head -n 1 | awk '/inet/ {print $2}' | cut -d'/' -f1)
+HOSTIP=
+CONFIGURE=""
 
 #VarsConnect
 
@@ -75,6 +99,9 @@ PKIPATH="/etc/icinga2/pki"
 CERTPATH="/var/lib/icinga2/certs"
 ZONENAME=""
 
+PARENTCN=""
+PARENTIP=""
+PARENTPORT="5665"
 
 SELHOST=""
 SATELITEIP=
@@ -99,22 +126,17 @@ HOST["server4"]="Satelit4, 192.168.4.4, Satelit4.ofen.lab, 52265, SAT4"
 
 verify_system() {
     if [ -x /sbin/openrc-run ]; then
-        HAS_OPENRC=true
-        return
+      HAS_OPENRC=true
+      return
     fi
     if [ -x /bin/systemctl ] || type systemctl > /dev/null 2>&1; then
-        HAS_SYSTEMD=true
-        return
+      HAS_SYSTEMD=true
+      return
     fi
     echo "Can not find systemd or openrc to use as a process supervisor for k3s"
 }
 
-#getip () {
-#  local IPADDRR
-#  if $;then
-#    return $IPADDRR
-#  fi
-#}
+
 
 exitsc () {
   echo -e "$1"
@@ -123,44 +145,44 @@ exitsc () {
 }
 
 
-initialize () {
-
-
-}
 
 #################
 # Install Agent #
 #################
 dpkg_valid () {
-    #enterfunc
-    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin" "icinga2-common" "icinga2-doc")
-    
-    for pkg in "${PACKAGES[@]}"; do
-        if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
-            log "${YELLOW}Paket '$pkg' is missing or corrupted. start reinstall${NC}"
-    
-            apt-get update && apt-get install --reinstall -y "$pkg"
-            
-        else
-            log "${GREEN}Package: $pkg valid${NC}"
-        fi
-    done
+  #enterfunc
+  PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin" "icinga2-common" "icinga2-doc")
+  
+  for pkg in "${PACKAGES[@]}"; do
+    if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
+      log "${YELLOW}Paket '$pkg' is missing or corrupted. start reinstall${NC}"
+
+      apt-get update && apt-get install --reinstall -y "$pkg"
+        
+    else
+      log "${GREEN}Package: $pkg valid${NC}"
+    fi
+  done
 
 }
 
 installation () {
 
   # DEBIAN & UBUNTU #
-  if [[ "$ID" = "debian" || "$ID" = "ubuntu"]]; then
+  if [[ "$ID" = "debian" || "$ID" = "ubuntu" ]]; then
     apt update && apt -y install apt-transport-https wget
       
-
+    if [ -n "${VERSION_CODENAME:-}" ]; then
+        DIST="$VERSION_CODENAME"
+    else
+        DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release)
+    fi
     
 
     # Key
     
     if dpkg -s icinga-archive-keyring &>/dev/null; then
-        log "${YELLOW}The Icinga2 repo key is already installed, skipping....${NC}"
+      log "${YELLOW}The Icinga2 repo key is already installed, skipping....${NC}"
     else      
       log "${GREEN}The Icinga2 repo key missing, initialize installation.${NC}"
       wget -O ./icinga-archive-keyring.deb "https://packages.icinga.com/icinga-archive-keyring_latest+${ID}${VERSION_ID}.deb"
@@ -194,7 +216,7 @@ installation () {
         icinga2 daemon -C
         
     fi
-    dpkg_valid ()
+    dpkg_valid 
 
 
 # ALPINE #
@@ -264,9 +286,9 @@ read_array () {
 
 # Funktion zur Tabellen-Ausgabe
 print_table () {
-    echo "===================================================================="
+    echo "======================================================================================"
     printf "%-4s | %-12s | %-16s | %-22s | %-6s | %-8s\n" "ID" "Name" "IP-Adresse" "FQDN" "Port" "Zone"
-    echo "--------------------------------------------------------------------"
+    echo "--------------------------------------------------------------------------------------"
 
     for satid in $(echo "${!SATELITES[@]}" | tr ' ' '\n' | sort -n); do
         
@@ -275,49 +297,75 @@ print_table () {
         
         printf "%-4s | %-12s | %-16s | %-22s | %-6s | %-8s\n" "$satid" "$name" "$ip" "$fqdn" "$port" "$zone"
     done
-    echo "===================================================================="
+    echo "======================================================================================"
 }
 
+run_catch() {
+    local timeout_sec="$1"
+    #erstes Argument in var
+    shift
+    
+    local cmd=("$@")
+    local exit_code=0
 
+   
+    #wenn timeout das exitcode speichern
+    timeout "$timeout_sec" "${cmd[@]}" || exit_code=$?
+
+    # Auswertung des Exit-Codes
+    if [ "$exit_code" -eq 124 ]; then
+        echo "[CATCH] TIMEOUT: Der Befehl dauerte länger als ${timeout_sec}s!" >&2
+        return 124
+    elif [ "$exit_code" -ne 0 ]; then
+        echo "[CATCH] FEHLER: Befehl schlug fehl mit Exit-Code ${exit_code}!" >&2
+        return "$exit_code"
+    fi
+
+    return 0
+}
 
 catch_icingacmd () {
-    local closeloop=""
-    while [ -z "$closeloop" ]; do
-        log "execute: $@"
-        log "timeout set to 10s"
-        if run_catch 10s $@; then
-            echo -e "${GREEN}Befehl erfolgreich ausgeführt.${NC}"
-            break
-        else
-            echo "timeout/error"
-            echo "following command failed: $@"
-            read -p "try again Y/n :" RETRY < /dev/tty
-            case "$RETRY" in
-                [Nn]*)
-                    #closeloop="true"
-                    break
-                    ;;
-                [Yy]*)
-                    log "Wiederhole Befehl..."
-                    # Kein break nötig: Die while-Schleife läuft einfach von vorne an
-                    ;;
-            esac
-        fi
-    done
+  local closeloop=""
+  while [ -z "$closeloop" ]; do
+    log "execute: $@"
+    log "timeout set to 10s"
+    if run_catch 10s $@; then
+      echo -e "${GREEN}Befehl erfolgreich ausgeführt.${NC}"
+      break
+    else
+      echo "timeout/error"
+      echo "following command failed: $@"
+      read -p "try again Y/n :" RETRY < /dev/tty
+      case "$RETRY" in
+        [Nn]*)
+          #closeloop="true"
+          break
+          ;;
+        [Yy]*)
+          log "Wiederhole Befehl..."
+          # Kein break nötig: Die while-Schleife läuft einfach von vorne an
+          ;;
+      esac
+    fi
+  done
 }
 
 configure_icinga () {
-  if
-  print_table ()
-  
-  PARENTIP=$ip
-  PARENTPORT=$port
-  PARENTCN=$fqdn
-  AGENTCN=$HOSTFQDN
-  ZONENAME=$zone
+
+  if [ -z  $PARENTCN ]; then
+    print_table
+    read -p "wich Satelite choose by ID: " sid < /dev/tty
+    # hier muss die Abfrage rein für welchen sat 
+    read_array $sid
+    PARENTIP=$ip
+    PARENTPORT=$port
+    PARENTCN=$fqdn
+    AGENTCN=$HOSTFQDN
+    ZONENAME=$zone
   fi
-  log "config for $name - $PARENTIP - $PARENTCN - $PARENTPORT => $AGENTCN -  - $CERTPATH"
-  atch_icingacmd icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT"
+
+  log "config for $name  $PARENTIP  $PARENTCN  $PARENTPORT => $AGENTCN  $CERTPATH"
+  catch_icingacmd icinga2 pki save-cert --trustedcert "$CERTPATH/ca.crt" --host "$PARENTIP" --port "$PARENTPORT"
   log "generating local Key und CSR..."
   catch_icingacmd icinga2 pki new-cert --cn "$AGENTCN" --key "$CERTPATH/$AGENTCN.key" --csr "$CERTPATH/$AGENTCN.csr"
   log "Sende PKI-Request an Master..."
@@ -374,25 +422,12 @@ fi
 
 # is /etc/os-release?
 
-if [ ! -f /etc/os-release ]; then
-  exitsc "${RED}could not find os-release file${NC}"
-fi
 
-source /etc/os-release
 
-# is $VERSION_ID?
-if [ -z  $VERSION_ID]; then
-  log "no VERSION_ID found"
-fi
 
-# is $DIST ?
-
-if [ -z  $DIST]; then
-  log "no VERSION_ID found"
-fi
 
 log "detect $NAME"
-installation ($ID)
+installation "$ID"
 
 
 
