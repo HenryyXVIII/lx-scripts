@@ -273,22 +273,7 @@ test_installed(){
 }
 
 #function-dpkg-valid
-dpkg_valid () {
-    #enterfunc
-    PACKAGES=("monitoring-plugins" "icinga2" "icinga2-bin" "icinga2-common" "icinga2-doc")
-    
-    for pkg in "${PACKAGES[@]}"; do
-        if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
-            log "${YELLOW}Paket '$pkg' is missing or corrupted. start reinstall${NC}"
-    
-            apt-get update && apt-get install --reinstall -y "$pkg"
-            
-        else
-            log "${GREEN}Package: $pkg valid${NC}"
-        fi
-    done
 
-}
 
 
 ################
@@ -452,7 +437,7 @@ catch_icingacmd () {
                     ;;
                 [Yy]*)
                     log "Wiederhole Befehl..."
-                    # Kein break nötig: Die while-Schleife läuft einfach von vorne an
+                    #repeat
                     ;;
             esac
         fi
